@@ -1,0 +1,109 @@
+{% extends "core/base.html" %}
+
+{% block title %}Inscription &mdash; Stage & Emplois{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="mb-4 text-center"><i class="bi bi-person-plus-fill text-primary"></i> Creer un compte</h2>
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ form.role.label }}</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="card border-2 h-100" style="cursor:pointer;">
+                                        <div class="card-body d-flex align-items-center">
+                                            <div class="me-3" style="font-size: 1.5rem;"><i class="bi bi-mortarboard-fill text-primary"></i></div>
+                                            <div class="flex-grow-1">
+                                                <strong>Etudiant</strong><br><small class="text-muted">Je cherche un stage / emploi</small>
+                                            </div>
+                                            <input type="radio" name="role" value="etudiant" class="form-check-input ms-2" {% if form.role.value == 'etudiant' %}checked{% endif %}>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="card border-2 h-100" style="cursor:pointer;">
+                                        <div class="card-body d-flex align-items-center">
+                                            <div class="me-3" style="font-size: 1.5rem;"><i class="bi bi-building-fill text-success"></i></div>
+                                            <div class="flex-grow-1">
+                                                <strong>Entreprise</strong><br><small class="text-muted">Je publie des offres</small>
+                                            </div>
+                                            <input type="radio" name="role" value="entreprise" class="form-check-input ms-2" {% if form.role.value == 'entreprise' %}checked{% endif %}>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors }}</div>{% endif %}
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3 text-muted">Informations de connexion</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.username.label }}</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label">{{ form.first_name.label }}</label>{{ form.first_name }}</div>
+                            <div class="col-md-6 mb-3"><label class="form-label">{{ form.last_name.label }}</label>{{ form.last_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.password1.label }}</label>
+                                {{ form.password1 }}
+                                {% if form.password1.errors %}<div class="text-danger small">{{ form.password1.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.password2.label }}</label>
+                                {{ form.password2 }}
+                                {% if form.password2.errors %}<div class="text-danger small">{{ form.password2.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3 text-muted"><i class="bi bi-mortarboard"></i> Informations Etudiant <small class="text-secondary">(si etudiant)</small></h5>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.formation.label }}</label>
+                            {{ form.formation }}
+                            {% if form.formation.errors %}<div class="text-danger small">{{ form.formation.errors }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3"><label class="form-label">{{ form.competences.label }}</label>{{ form.competences }}</div>
+                        <div class="mb-3"><label class="form-label">{{ form.cv.label }}</label>{{ form.cv }}</div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3 text-muted"><i class="bi bi-building"></i> Informations Entreprise <small class="text-secondary">(si entreprise)</small></h5>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.nom_entreprise.label }}</label>
+                            {{ form.nom_entreprise }}
+                            {% if form.nom_entreprise.errors %}<div class="text-danger small">{{ form.nom_entreprise.errors }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3"><label class="form-label">{{ form.secteur.label }}</label>{{ form.secteur }}</div>
+                        <div class="mb-3"><label class="form-label">{{ form.adresse.label }}</label>{{ form.adresse }}</div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-circle"></i> S'inscrire</button>
+                        </div>
+                    </form>
+                    <hr>
+                    <p class="text-center text-muted">Deja inscrit ? <a href="{% url 'core:login' %}">Connectez-vous ici</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

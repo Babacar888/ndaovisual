@@ -1,0 +1,89 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ offre.titre }} &mdash; Stage & Emplois{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="{% url 'core:offre_list' %}" class="btn btn-outline-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> Retour a la liste</a>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge {% if offre.type_offre == 'stage' %}badge-type-stage{% else %}badge-type-emploi{% endif %} mb-2">{{ offre.get_type_offre_display }}</span>
+                            <h1 class="h2">{{ offre.titre }}</h1>
+                            <p class="text-muted mb-0"><i class="bi bi-building"></i> {{ offre.entreprise.nom_entreprise|default:offre.entreprise.username }}{% if offre.entreprise.secteur %} &middot; {{ offre.entreprise.secteur }}{% endif %}</p>
+                        </div>
+                        <div>
+                            {% if offre.is_active %}<span class="badge bg-success">Ouverte</span>
+                            {% elif offre.est_expiree %}<span class="badge bg-warning text-dark">Expiree</span>
+                            {% else %}<span class="badge bg-secondary">Cloturee</span>{% endif %}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mb-3">
+                        {% if offre.localisation %}
+                            <div class="col-md-4"><i class="bi bi-geo-alt-fill text-muted"></i> <strong>Localisation :</strong><br>{{ offre.localisation }}</div>
+                        {% endif %}
+                        {% if offre.date_limite %}
+                            <div class="col-md-4"><i class="bi bi-calendar-event text-muted"></i> <strong>Date limite :</strong><br>{{ offre.date_limite|date:"d/m/Y" }}{% if offre.est_expiree %} <span class="badge bg-warning text-dark">Expiree</span>{% endif %}</div>
+                        {% endif %}
+                        <div class="col-md-4"><i class="bi bi-clock text-muted"></i> <strong>Publiee le :</strong><br>{{ offre.date_publication|date:"d/m/Y" }}</div>
+                    </div>
+                    <hr>
+                    <h5>Description du poste</h5>
+                    <p style="white-space: pre-line;">{{ offre.description }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="bi bi-people"></i> Candidatures</h5>
+                    <p class="display-6 mb-3">{{ offre.nombre_candidatures }}</p>
+                    <p class="text-muted">candidature(s) recue(s)</p>
+                </div>
+            </div>
+            {% if user.is_authenticated and user.role == 'etudiant' %}
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="mb-3"><i class="bi bi-send"></i> Postuler</h5>
+                        {% if offre.is_active %}
+                            {% if deja_candidate %}
+                                <div class="alert alert-info"><i class="bi bi-check-circle"></i> Vous avez deja candidate a cette offre.</div>
+                                <a href="{% url 'core:dashboard_etudiant' %}" class="btn btn-outline-primary btn-sm">Voir mes candidatures</a>
+                            {% else %}
+                                <form method="post" action="{% url 'core:candidater' offre.pk %}">
+                                    {% csrf_token %}
+                                    {{ candidature_form.as_p }}
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill"></i> Soumettre ma candidature</button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Cette offre n'est plus ouverte aux candidatures.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% elif user.is_authenticated and user.role == 'entreprise' and offre.entreprise_id == user.entreprise.pk %}
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="mb-3">Gestion de l'offre</h5>
+                        <a href="{% url 'core:offre_update' offre.pk %}" class="btn btn-outline-primary btn-sm w-100 mb-2"><i class="bi bi-pencil"></i> Modifier</a>
+                        <a href="{% url 'core:offre_delete' offre.pk %}" class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash"></i> Supprimer</a>
+                    </div>
+                </div>
+            {% elif not user.is_authenticated %}
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <p class="text-muted mb-3">Connectez-vous pour postuler a cette offre.</p>
+                        <a href="{% url 'core:login' %}" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> Connexion</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

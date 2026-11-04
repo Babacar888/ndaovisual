@@ -1,0 +1,72 @@
+{% extends "core/base.html" %}
+{% load dash_filters %}
+
+{% block title %}Tableau de bord Etudiant{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-speedometer2 text-primary"></i> Mon tableau de bord</h1>
+            <p class="text-muted mb-0">Bonjour {{ etudiant.first_name|default:etudiant.username }}, voici vos candidatures.</p>
+        </div>
+        <a href="{% url 'core:offre_list' %}" class="btn btn-primary"><i class="bi bi-search"></i> Voir les offres</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 text-center"><i class="bi bi-mortarboard-fill" style="font-size: 3rem; color: #0d6efd;"></i></div>
+                <div class="col-md-9">
+                    <h5>{{ etudiant.get_full_name|default:etudiant.username }}</h5>
+                    <p class="text-muted mb-1"><i class="bi bi-envelope"></i> {{ etudiant.email }}</p>
+                    {% if etudiant.formation %}<p class="mb-1"><i class="bi bi-book"></i> {{ etudiant.formation }}</p>{% endif %}
+                    {% if etudiant.competences %}<p class="mb-1"><i class="bi bi-stars"></i> {{ etudiant.competences }}</p>{% endif %}
+                    {% if etudiant.cv %}<p class="mb-0"><i class="bi bi-file-earmark-pdf"></i> <a href="{{ etudiant.cv.url }}" target="_blank">Voir mon CV</a></p>
+                    {% else %}<p class="text-muted mb-0"><i class="bi bi-file-earmark"></i> Aucun CV televerse</p>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6">{{ candidatures|length }}</div><small class="text-muted">Candidatures totales</small></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6 text-warning">{{ candidatures|filter_by_statut_en_cours|length }}</div><small class="text-muted">En cours</small></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6 text-success">{{ candidatures|filter_by_statut_acceptee|length }}</div><small class="text-muted">Acceptees</small></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6 text-danger">{{ candidatures|filter_by_statut_refusee|length }}</div><small class="text-muted">Refusees</small></div></div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-list-check"></i> Mes candidatures</h5>
+            {% if candidatures %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>Offre</th><th>Entreprise</th><th>Type</th><th>Date</th><th>Statut</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for c in candidatures %}
+                                <tr>
+                                    <td><a href="{% url 'core:offre_detail' c.offre.pk %}">{{ c.offre.titre }}</a></td>
+                                    <td>{{ c.offre.entreprise.nom_entreprise|default:c.offre.entreprise.username }}</td>
+                                    <td><span class="badge {% if c.offre.type_offre == 'stage' %}badge-type-stage{% else %}badge-type-emploi{% endif %}">{{ c.offre.get_type_offre_display }}</span></td>
+                                    <td class="small">{{ c.date_candidature|date:"d/m/Y" }}</td>
+                                    <td><span class="badge statut-{{ c.statut }}">{{ c.get_statut_display }}</span></td>
+                                    <td><a href="{% url 'core:offre_detail' c.offre.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-eye"></i></a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-2">Vous n'avez pas encore de candidature.</p>
+                    <a href="{% url 'core:offre_list' %}" class="btn btn-primary"><i class="bi bi-search"></i> Parcourir les offres</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

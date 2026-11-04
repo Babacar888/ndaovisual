@@ -1,0 +1,66 @@
+{% extends "core/base.html" %}
+
+{% block title %}Administration &mdash; Statistiques{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4"><i class="bi bi-graph-up text-primary"></i> Tableau de bord Administrateur</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3"><div class="card text-center border-primary"><div class="card-body"><i class="bi bi-people-fill text-primary" style="font-size: 2rem;"></i><div class="display-6 mt-2">{{ total_utilisateurs }}</div><small class="text-muted">Utilisateurs</small></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card text-center border-success"><div class="card-body"><i class="bi bi-megaphone-fill text-success" style="font-size: 2rem;"></i><div class="display-6 mt-2">{{ total_offres }}</div><small class="text-muted">Offres</small></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card text-center border-warning"><div class="card-body"><i class="bi bi-file-earmark-text-fill text-warning" style="font-size: 2rem;"></i><div class="display-6 mt-2">{{ total_candidatures }}</div><small class="text-muted">Candidatures</small></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card text-center border-info"><div class="card-body"><i class="bi bi-mortarboard-fill text-info" style="font-size: 2rem;"></i><div class="display-6 mt-2">{{ total_etudiants }}</div><small class="text-muted">Etudiants</small></div></div></div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card"><div class="card-body">
+                <h5><i class="bi bi-bar-chart"></i> Repartition des offres par type</h5>
+                <table class="table table-sm mt-3">
+                    <thead><tr><th>Type</th><th>Nombre</th></tr></thead>
+                    <tbody>
+                        {% for t in types_offres %}<tr><td>{% if t.type_offre == 'stage' %}Stage{% else %}Emploi{% endif %}</td><td><span class="badge bg-primary">{{ t.total }}</span></td></tr>
+                        {% empty %}<tr><td colspan="2" class="text-muted text-center">Aucune donnee</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card"><div class="card-body">
+                <h5><i class="bi bi-pie-chart"></i> Repartition des candidatures par statut</h5>
+                <table class="table table-sm mt-3">
+                    <thead><tr><th>Statut</th><th>Nombre</th></tr></thead>
+                    <tbody>
+                        {% for s in statuts_candidatures %}<tr><td>{{ s.statut|title }}</td><td><span class="badge bg-info">{{ s.total }}</span></td></tr>
+                        {% empty %}<tr><td colspan="2" class="text-muted text-center">Aucune donnee</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card"><div class="card-body">
+                <h5><i class="bi bi-clock-history"></i> Dernieres offres</h5>
+                <ul class="list-group list-group-flush mt-2">
+                    {% for offre in dernieres_offres %}<li class="list-group-item d-flex justify-content-between align-items-center"><span>{{ offre.titre }}</span><span class="text-muted small">{{ offre.date_publication|date:"d/m/Y" }}</span></li>
+                    {% empty %}<li class="list-group-item text-muted text-center">Aucune offre</li>{% endfor %}
+                </ul>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card"><div class="card-body">
+                <h5><i class="bi bi-clock-history"></i> Dernieres candidatures</h5>
+                <ul class="list-group list-group-flush mt-2">
+                    {% for c in dernieres_candidatures %}<li class="list-group-item d-flex justify-content-between align-items-center"><span>{{ c.etudiant.username }} &rarr; {{ c.offre.titre }}</span><span class="badge statut-{{ c.statut }}">{{ c.get_statut_display }}</span></li>
+                    {% empty %}<li class="list-group-item text-muted text-center">Aucune candidature</li>{% endfor %}
+                </ul>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center"><a href="/admin/" class="btn btn-outline-primary"><i class="bi bi-gear"></i> Acceder a l'admin Django</a></div>
+</div>
+{% endblock %}

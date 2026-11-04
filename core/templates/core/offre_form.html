@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ titre_page|default:"Offre"}} &mdash; Stage & Emplois{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="mb-4"><i class="bi bi-megaphone text-primary"></i> {{ titre_page|default:"Creer une offre" }}</h2>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.titre.label }}</label>
+                            {{ form.titre }}
+                            {% if form.titre.errors %}<div class="text-danger small">{{ form.titre.errors }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.type_offre.label }}</label>
+                            {{ form.type_offre }}
+                            {% if form.type_offre.errors %}<div class="text-danger small">{{ form.type_offre.errors }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.localisation.label }}</label>
+                                {{ form.localisation }}
+                                {% if form.localisation.errors %}<div class="text-danger small">{{ form.localisation.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.date_limite.label }}</label>
+                                {{ form.date_limite }}
+                                {% if form.date_limite.errors %}<div class="text-danger small">{{ form.date_limite.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-circle"></i> {{ bouton_texte|default:"Enregistrer" }}</button>
+                            <a href="{% url 'core:dashboard_entreprise' %}" class="btn btn-outline-secondary btn-lg">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

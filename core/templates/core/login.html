@@ -1,0 +1,38 @@
+{% extends "core/base.html" %}
+
+{% block title %}Connexion &mdash; Stage & Emplois{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="mb-4 text-center"><i class="bi bi-box-arrow-in-right text-primary"></i> Connexion</h2>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.password.label }}</label>
+                            {{ form.password }}
+                            {% if form.password.errors %}<div class="text-danger small">{{ form.password.errors }}</div>{% endif %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-box-arrow-in-right"></i> Se connecter</button>
+                        </div>
+                    </form>
+                    <hr>
+                    <p class="text-center text-muted mb-0">Pas encore de compte ? <a href="{% url 'core:register' %}">Inscrivez-vous</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

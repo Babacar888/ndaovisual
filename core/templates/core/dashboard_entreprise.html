@@ -1,0 +1,95 @@
+{% extends "core/base.html" %}
+{% load dash_filters %}
+
+{% block title %}Tableau de bord Entreprise{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="bi bi-speedometer2 text-primary"></i> Tableau de bord</h1>
+            <p class="text-muted mb-0">{{ entreprise.nom_entreprise|default:entreprise.username }}{% if entreprise.secteur %} &middot; {{ entreprise.secteur }}{% endif %}</p>
+        </div>
+        <a href="{% url 'core:offre_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Publier une offre</a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6">{{ offres|length }}</div><small class="text-muted">Offres publiees</small></div></div></div>
+        <div class="col-md-4 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6 text-success">{{ offres|filter_active|length }}</div><small class="text-muted">Offres actives</small></div></div></div>
+        <div class="col-md-4 mb-3"><div class="card text-center"><div class="card-body"><div class="display-6 text-warning">{{ toutes_candidatures|length }}</div><small class="text-muted">Candidatures recues</small></div></div></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-megaphone"></i> Mes offres</h5>
+            {% if offres %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>Titre</th><th>Type</th><th>Statut</th><th>Candidatures</th><th>Date</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for offre in offres %}
+                                <tr>
+                                    <td><a href="{% url 'core:offre_detail' offre.pk %}">{{ offre.titre }}</a></td>
+                                    <td><span class="badge {% if offre.type_offre == 'stage' %}badge-type-stage{% else %}badge-type-emploi{% endif %}">{{ offre.get_type_offre_display }}</span></td>
+                                    <td>
+                                        {% if offre.is_active %}<span class="badge bg-success">Active</span>
+                                        {% elif offre.est_expiree %}<span class="badge bg-warning text-dark">Expiree</span>
+                                        {% else %}<span class="badge bg-secondary">Cloturee</span>{% endif %}
+                                    </td>
+                                    <td><span class="badge bg-info">{{ offre.nombre_candidatures }}</span></td>
+                                    <td class="small">{{ offre.date_publication|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'core:offre_update' offre.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i></a>
+                                        <a href="{% url 'core:offre_delete' offre.pk %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4"><i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i><p class="text-muted mt-2">Vous n'avez pas encore publie d'offre.</p></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-people"></i> Candidatures recues</h5>
+            {% if toutes_candidatures %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>Etudiant</th><th>Offre</th><th>Date</th><th>Statut</th><th>Changer le statut</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for c in toutes_candidatures %}
+                                <tr>
+                                    <td>{{ c.etudiant.get_full_name|default:c.etudiant.username }}<br><small class="text-muted">{{ c.etudiant.email }}</small></td>
+                                    <td>{{ c.offre.titre }}</td>
+                                    <td class="small">{{ c.date_candidature|date:"d/m/Y" }}</td>
+                                    <td><span class="badge statut-{{ c.statut }}">{{ c.get_statut_display }}</span></td>
+                                    <td>
+                                        <form method="post" action="{% url 'core:changer_statut' c.pk %}" class="d-flex gap-2" style="min-width:250px;">
+                                            {% csrf_token %}
+                                            <select name="statut" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                {% for value, label in c.STATUT_CHOICES %}
+                                                    <option value="{{ value }}" {% if c.statut == value %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4"><i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i><p class="text-muted mt-2">Aucune candidature recue pour le moment.</p></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
