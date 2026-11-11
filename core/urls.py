@@ -1,6 +1,7 @@
 """URLs de l'application core."""
 from django.urls import path
 from . import views
+from .views import EtudiantProfileUpdateView
 
 app_name = "core"
 
@@ -23,7 +24,8 @@ urlpatterns = [
 
     # Tableaux de bord
     path("dashboard/", views.dashboard_redirect, name="dashboard"),
-    path("dashboard/etudiant/", views.DashboardEtudiantView.as_view(), name="dashboard_etudiant"),
+   path("dashboard/etudiant/", views.EtudiantDashboardView.as_view(), name="dashboard_etudiant"),
     path("dashboard/entreprise/", views.DashboardEntrepriseView.as_view(), name="dashboard_entreprise"),
     path("dashboard/admin/", views.DashboardAdminView.as_view(), name="dashboard_admin"),
+    path('dashboard/etudiant/profil/', EtudiantProfileUpdateView.as_view(), name='etudiant_profil'),
 ]

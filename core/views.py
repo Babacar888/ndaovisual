@@ -26,7 +26,7 @@ from django.views.generic import (
 
 from .forms import (
     CandidatureForm, CandidatureStatutForm, ConnexionForm,
-    InscriptionForm, OffreFiltreForm, OffreForm,
+    InscriptionForm, OffreFiltreForm, OffreForm, EtudiantProfilForm,
 )
 from .models import Candidature, Entreprise, Etudiant, Offre, Utilisateur
 
@@ -88,6 +88,10 @@ class ConnexionView(LoginView):
 class DeconnexionView(LogoutView):
     """Deconnexion utilisateur (CBV)."""
     next_page = reverse_lazy("core:offre_list")
+    http_method_names = ["get", "post", "options"]
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 
 # =========================================================================
@@ -136,7 +140,7 @@ class OffreDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated and self.request.user.role == Utilisateur.ROLE_ETUDIANT:
             try:
-                etudiant = self.request.user.etudiant
+                etudiant = self.request.user.as_etudiant()
                 context["deja_candidate"] = Candidature.objects.filter(
                     etudiant=etudiant, offre=self.object
                 ).exists()
@@ -157,7 +161,7 @@ class OffreCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("core:dashboard_entreprise")
 
     def form_valid(self, form):
-        form.instance.entreprise = self.request.user.entreprise
+        form.instance.entreprise = self.request.user.as_entreprise()
         messages.success(self.request, "Votre offre a ete publiee avec succes.")
         return super().form_valid(form)
 
@@ -176,7 +180,7 @@ class OffreUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "core/offre_form.html"
 
     def get_queryset(self):
-        return Offre.objects.filter(entreprise=self.request.user.entreprise)
+        return Offre.objects.filter(entreprise=self.request.user.as_entreprise())
 
     def get_success_url(self):
         messages.success(self.request, "L'offre a ete modifiee avec succes.")
@@ -197,7 +201,7 @@ class OffreDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy("core:dashboard_entreprise")
 
     def get_queryset(self):
-        return Offre.objects.filter(entreprise=self.request.user.entreprise)
+        return Offre.objects.filter(entreprise=self.request.user.as_entreprise())
 
     def form_valid(self, form):
         messages.success(self.request, "L'offre a ete supprimee.")
@@ -217,7 +221,7 @@ class CandidaterView(LoginRequiredMixin, View):
         if not offre.is_active():
             messages.error(request, "Cette offre n'est plus accessible.")
             return redirect("core:offre_detail", pk=pk)
-        etudiant = request.user.etudiant
+        etudiant = request.user.as_etudiant()
         form = CandidatureForm(request.POST)
         if form.is_valid():
             candidature, creee = etudiant.candidater(
@@ -242,17 +246,26 @@ def dashboard_redirect(request):
     return redirect(request.user.get_dashboard_url())
 
 
-@method_decorator(etudiant_required, name="dispatch")
-class DashboardEtudiantView(LoginRequiredMixin, TemplateView):
-    """Tableau de bord de l'etudiant: liste de ses candidatures (CBV)."""
-    template_name = "core/dashboard_etudiant.html"
+@method_decorator(etudiant_required, name='dispatch')
+class EtudiantDashboardView(LoginRequiredMixin, TemplateView):
+  template_name = "core/dashboard_etudiant.html"
+  def get_etudiant(self):
+                # Si la ligne Etudiant n'existe pas, on crée juste la ligne enfant
+                # en réutilisant le même id que l'Utilisateur, on ne recrée pas un user
+                try:
+                    return self.request.user.as_etudiant()
+                except Etudiant.DoesNotExist:
+                    etudiant = Etudiant(utilisateur_ptr=self.request.user)
+                    etudiant.save_base(raw=True)
+                    # On recharge pour être sûr
+                    return Etudiant.objects.get(pk=self.request.user.pk)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        etudiant = self.request.user.etudiant
-        context["candidatures"] = etudiant.dashboard()
-        context["etudiant"] = etudiant
-        return context
+  def get_context_data(self, **kwargs):
+                context = super().get_context_data(**kwargs)
+                etudiant = self.get_etudiant()
+                context['etudiant'] = etudiant
+                context['candidatures'] = Candidature.objects.filter(etudiant=etudiant)
+                return context
 
 
 @method_decorator(entreprise_required, name="dispatch")
@@ -262,7 +275,7 @@ class DashboardEntrepriseView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        entreprise = self.request.user.entreprise
+        entreprise = self.request.user.as_entreprise()
         context["offres"] = entreprise.dashboard()
         context["toutes_candidatures"] = (
             Candidature.objects.filter(offre__entreprise=entreprise)
@@ -279,7 +292,7 @@ class ChangerStatutCandidatureView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         candidature = get_object_or_404(
-            Candidature, pk=pk, offre__entreprise=request.user.entreprise
+            Candidature, pk=pk, offre__entreprise=request.user.as_entreprise()
         )
         form = CandidatureStatutForm(request.POST, instance=candidature)
         if form.is_valid():
@@ -308,3 +321,12 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
         context["dernieres_offres"] = Offre.objects.select_related("entreprise").order_by("-date_publication")[:5]
         context["dernieres_candidatures"] = Candidature.objects.select_related("etudiant", "offre").order_by("-date_candidature")[:5]
         return context
+   
+class EtudiantProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = Etudiant
+    form_class = EtudiantProfilForm
+    template_name = "core/etudiant_profil.html"
+    success_url = reverse_lazy('core:dashboard_etudiant')
+
+    def get_object(self):
+        return self.request.user.as_etudiant()

@@ -66,6 +66,22 @@ class Utilisateur(AbstractUser):
         """
         return {}
 
+    def as_etudiant(self):
+           try:
+            return self.etudiant
+           except Etudiant.DoesNotExist:
+            e = Etudiant(utilisateur_ptr=self)
+            e.save_base(raw=True)
+            return Etudiant.objects.get(pk=self.pk)
+
+    def as_entreprise(self):
+        try:
+            return self.entreprise
+        except Entreprise.DoesNotExist:
+            e = Entreprise(utilisateur_ptr=self)
+            e.save_base(raw=True)
+            return Entreprise.objects.get(pk=self.pk)
+
 
 class Etudiant(Utilisateur):
     """Etudiant: herite de Utilisateur (heritage multi-table).

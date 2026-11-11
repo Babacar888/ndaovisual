@@ -4,7 +4,7 @@ Formulaires de l'application core.
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import Candidature, Entreprise, Offre, Utilisateur
+from .models import Candidature, Entreprise, Etudiant, Offre, Utilisateur
 
 
 class InscriptionForm(UserCreationForm):
@@ -54,19 +54,21 @@ class InscriptionForm(UserCreationForm):
         if commit:
             user.save()
             if user.role == Utilisateur.ROLE_ETUDIANT:
-                Etudiant.objects.create(
+                etudiant = Etudiant(
                     utilisateur_ptr=user,
                     formation=self.cleaned_data.get("formation", ""),
                     competences=self.cleaned_data.get("competences", ""),
                     cv=self.cleaned_data.get("cv"),
                 )
+                etudiant.save_base(raw=True)
             elif user.role == Utilisateur.ROLE_ENTREPRISE:
-                Entreprise.objects.create(
+                entreprise = Entreprise(
                     utilisateur_ptr=user,
                     nom_entreprise=self.cleaned_data.get("nom_entreprise", ""),
                     secteur=self.cleaned_data.get("secteur", ""),
                     adresse=self.cleaned_data.get("adresse", ""),
                 )
+                entreprise.save_base(raw=True)
         return user
 
 
@@ -136,3 +138,17 @@ class OffreFiltreForm(forms.Form):
         super().__init__(*args, **kwargs)
         secteurs = Entreprise.objects.exclude(secteur="").values_list("secteur", flat=True).distinct().order_by("secteur")
         self.fields["secteur"].choices = [("", "Tous les secteurs")] + [(s, s) for s in secteurs]
+
+class EtudiantProfilForm(forms.ModelForm):
+    class Meta:
+        model = Etudiant
+        fields = ['formation', 'competences', 'cv']
+        labels = {
+            'formation': 'Formation',
+            'competences': 'Compétences',
+            'cv': 'CV (PDF)',
+        }
+        widgets = {
+            'formation': forms.TextInput(attrs={'class': 'form-control'}),
+            'competences': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
